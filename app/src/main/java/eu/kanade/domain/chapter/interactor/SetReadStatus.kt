@@ -1,6 +1,7 @@
 package eu.kanade.domain.chapter.interactor
 
 import eu.kanade.domain.download.interactor.DeleteDownload
+import eu.kanade.tachiyomi.data.sync.SyncManager
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
@@ -41,6 +42,24 @@ class SetReadStatus(
             chapterRepository.updateAll(
                 chaptersToUpdate.map { mapper(it, read) },
             )
+
+            if (read) {
+                try {
+
+                    chaptersToUpdate.groupBy { it.mangaId }.forEach { (mangaId, chaptersList) ->
+                        val manga = mangaRepository.getMangaById(mangaId)
+                        val chapterNumbers = chaptersList.map { it.chapterNumber.toFloat() }
+                        SyncManager.pushProgressBulk(
+                            mangaTitle = manga.title,
+                            chapterNumbers = chapterNumbers,
+                            mangaSource = manga.source.toString()
+                        )
+                    }
+                } catch (e: Exception) {
+                    logcat(LogPriority.ERROR) { "Error en MihonSync: ${e.message}" }
+                }
+            }
+
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             return@withNonCancellableContext Result.InternalError(e)

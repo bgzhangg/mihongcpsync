@@ -103,6 +103,10 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.injectLazy
+import androidx.lifecycle.lifecycleScope
+import eu.kanade.tachiyomi.data.sync.SyncManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : BaseActivity() {
 
@@ -271,6 +275,19 @@ class MainActivity : BaseActivity() {
         if (isLaunch && libraryPreferences.autoClearChapterCache().get()) {
             lifecycleScope.launchIO {
                 chapterCache.clear()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        lifecycleScope.launch {
+            delay(1500)
+            try {
+                SyncManager.pullAndApplyChanges()
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR) { "Error en Auto-Sync: ${e.message}" }
             }
         }
     }

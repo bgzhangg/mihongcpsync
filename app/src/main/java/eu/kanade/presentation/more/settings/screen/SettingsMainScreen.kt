@@ -221,6 +221,12 @@ object SettingsMainScreen : Screen() {
             screen = SettingsSecurityScreen,
         ),
         Item(
+            titleRes = MR.strings.pref_settings_sync,
+            subtitleRes = MR.strings.pref_sync_summary, // O usa MR.strings.label_data si no quieres crear strings nuevos
+            icon = Icons.Outlined.Sync, // Necesitas importar el icono,
+            screen = SettingsSyncScreen,
+        ),
+        Item(
             titleRes = MR.strings.pref_category_advanced,
             subtitleRes = MR.strings.pref_advanced_summary,
             icon = Icons.Outlined.Code,

@@ -78,6 +78,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
 import java.util.Date
+import eu.kanade.tachiyomi.data.sync.SyncManager
 
 /**
  * Presenter used by the activity to perform background operations.
@@ -561,6 +562,19 @@ class ReaderViewModel @JvmOverloads constructor(
         readerChapter.chapter.read = true
         updateTrackChapterRead(readerChapter)
         deleteChapterIfNeeded(readerChapter)
+        try {
+            val currentManga = manga
+            if (currentManga != null) {
+                SyncManager.pushProgress(
+                    mangaTitle = currentManga.title,
+                    chapterNumber = readerChapter.chapter.chapter_number,
+                    mangaSource = currentManga.source.toString()
+                )
+                logcat { "MihonSync: Completado cap ${readerChapter.chapter.chapter_number} de ${currentManga.title}" }
+            }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR) { "Error en MihonSync: ${e.message}" }
+        }
 
         val markDuplicateAsRead = libraryPreferences.markDuplicateReadChapterAsRead().get()
             .contains(LibraryPreferences.MARK_DUPLICATE_CHAPTER_READ_EXISTING)
@@ -580,7 +594,6 @@ class ReaderViewModel @JvmOverloads constructor(
             }
         updateChapter.awaitAll(duplicateUnreadChapters)
     }
-
     fun restartReadTimer() {
         chapterReadStartTime = Instant.now().toEpochMilli()
     }
